@@ -1,0 +1,740 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HKJC Racing Predictor</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0a0a0f;
+  --bg2: #111118;
+  --bg3: #1a1a24;
+  --border: rgba(255,255,255,0.08);
+  --border2: rgba(255,255,255,0.15);
+  --text: #e8e8f0;
+  --muted: #888899;
+  --hint: #555566;
+  --gold: #c8a84b;
+  --gold2: #f0d080;
+  --green: #3ecf8e;
+  --red: #f06060;
+  --blue: #5b8dee;
+  --amber: #f0a030;
+  --font: 'Syne', sans-serif;
+  --mono: 'DM Mono', monospace;
+  --r: 8px;
+  --r2: 14px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:14px;min-height:100vh}
+a{color:var(--gold);text-decoration:none}
+input,select,textarea{background:var(--bg3);color:var(--text);border:1px solid var(--border2);border-radius:var(--r);padding:9px 12px;font-size:13px;font-family:var(--font);width:100%;outline:none;transition:border-color .2s}
+input:focus,select:focus{border-color:var(--gold)}
+select option{background:var(--bg3)}
+button{background:transparent;border:1px solid var(--border2);color:var(--text);border-radius:var(--r);padding:9px 18px;font-size:13px;font-family:var(--font);cursor:pointer;transition:all .15s}
+button:hover{border-color:var(--border2);background:var(--bg3)}
+button.gold{background:var(--gold);color:#000;border-color:var(--gold);font-weight:700}
+button.gold:hover{background:var(--gold2);border-color:var(--gold2)}
+button:disabled{opacity:.35;cursor:not-allowed}
+label{display:block;font-size:12px;color:var(--muted);margin-bottom:5px;letter-spacing:.03em}
+.container{max-width:960px;margin:0 auto;padding:0 20px}
+header{border-bottom:1px solid var(--border);padding:20px 0;margin-bottom:0}
+.header-inner{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px}
+.logo{display:flex;align-items:center;gap:12px}
+.logo-mark{width:36px;height:36px;background:var(--gold);border-radius:6px;display:flex;align-items:center;justify-content:center;font-weight:700;color:#000;font-size:15px;font-family:var(--mono)}
+.logo-text{font-size:18px;font-weight:700;letter-spacing:.02em}
+.logo-sub{font-size:12px;color:var(--muted);margin-top:1px}
+.last-update{font-size:11px;color:var(--hint);font-family:var(--mono)}
+.tabs{display:flex;border-bottom:1px solid var(--border);overflow-x:auto;scrollbar-width:none}
+.tabs::-webkit-scrollbar{display:none}
+.tab{padding:14px 20px;font-size:13px;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap;transition:all .15s;letter-spacing:.02em;user-select:none}
+.tab:hover{color:var(--text)}
+.tab.active{color:var(--gold);border-bottom-color:var(--gold)}
+.page{padding:28px 0;display:none}
+.page.active{display:block}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+.grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+@media(max-width:600px){.grid2,.grid3,.grid4{grid-template-columns:1fr}}
+.field{margin-bottom:14px}
+.card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r2);padding:18px 20px;margin-bottom:12px;transition:border-color .2s}
+.card:hover{border-color:var(--border2)}
+.card.featured{border-color:var(--gold);background:linear-gradient(135deg,var(--bg2) 0%,rgba(200,168,75,.04) 100%)}
+.badge{display:inline-block;padding:3px 9px;border-radius:4px;font-size:11px;font-family:var(--mono);letter-spacing:.03em}
+.badge.gold{background:rgba(200,168,75,.15);color:var(--gold)}
+.badge.green{background:rgba(62,207,142,.12);color:var(--green)}
+.badge.red{background:rgba(240,96,96,.12);color:var(--red)}
+.badge.blue{background:rgba(91,141,238,.12);color:var(--blue)}
+.badge.amber{background:rgba(240,160,48,.12);color:var(--amber)}
+.metric{background:var(--bg3);border:1px solid var(--border);border-radius:var(--r);padding:16px;text-align:center}
+.metric .val{font-size:28px;font-weight:700;margin:4px 0;font-family:var(--mono)}
+.metric .lbl{font-size:11px;color:var(--muted);letter-spacing:.05em;text-transform:uppercase}
+.metric .sub{font-size:10px;color:var(--hint);margin-top:3px}
+.sec{font-size:12px;color:var(--muted);letter-spacing:.08em;text-transform:uppercase;margin:24px 0 12px;padding-bottom:8px;border-bottom:1px solid var(--border)}
+.race-info-bar{background:var(--bg3);border:1px solid var(--border);border-radius:var(--r);padding:10px 16px;font-size:12px;color:var(--muted);margin-bottom:20px;font-family:var(--mono);display:flex;gap:16px;flex-wrap:wrap;align-items:center}
+.race-info-bar span{display:flex;align-items:center;gap:5px}
+.race-info-bar strong{color:var(--text)}
+table{width:100%;border-collapse:collapse}
+th{text-align:left;padding:8px 10px;font-size:11px;color:var(--hint);font-family:var(--mono);letter-spacing:.05em;text-transform:uppercase;border-bottom:1px solid var(--border)}
+td{padding:9px 10px;font-size:13px;border-bottom:1px solid var(--border);vertical-align:middle}
+tr:last-child td{border-bottom:none}
+tr.top3{background:rgba(200,168,75,.03)}
+.prob-bar{height:4px;background:var(--bg3);border-radius:2px;overflow:hidden;margin-top:4px;width:80px}
+.prob-fill{height:100%;background:var(--gold);border-radius:2px;transition:width .5s}
+.disclaimer{font-size:11px;color:var(--hint);border-top:1px solid var(--border);margin-top:40px;padding-top:16px;line-height:1.6}
+.alert{padding:12px 14px;border-radius:var(--r);font-size:12px;margin-top:8px;line-height:1.5;display:flex;gap:10px;align-items:flex-start}
+.alert.warn{background:rgba(240,160,48,.1);border:1px solid rgba(240,160,48,.25);color:var(--amber)}
+.alert.danger{background:rgba(240,96,96,.1);border:1px solid rgba(240,96,96,.25);color:var(--red)}
+.alert.success{background:rgba(62,207,142,.08);border:1px solid rgba(62,207,142,.2);color:var(--green)}
+.move-up{color:var(--green)}
+.move-dn{color:var(--red)}
+.value-good{color:var(--green);font-weight:700}
+.value-bad{color:var(--red)}
+.horse-row{display:flex;align-items:center;gap:10px;padding:10px 14px;border:1px solid var(--border);border-radius:var(--r);margin-bottom:8px;transition:border-color .2s}
+.horse-row:hover{border-color:var(--border2)}
+.horse-name{font-size:14px;font-weight:700;flex:1}
+.horse-meta{font-size:12px;color:var(--muted);font-family:var(--mono)}
+.empty{text-align:center;padding:48px;color:var(--hint)}
+.empty p{margin-bottom:16px;font-size:14px}
+.add-form{background:var(--bg2);border:1px solid var(--border2);border-radius:var(--r2);padding:20px;margin-top:12px}
+.add-form h3{font-size:14px;font-weight:700;margin-bottom:16px;color:var(--gold)}
+.hint{font-size:11px;color:var(--hint);margin-top:6px;line-height:1.5}
+.flex-row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.scraped-banner{background:linear-gradient(90deg,rgba(62,207,142,.08),rgba(91,141,238,.06));border:1px solid rgba(62,207,142,.2);border-radius:var(--r);padding:10px 14px;font-size:12px;color:var(--green);margin-bottom:16px;display:flex;align-items:center;gap:8px}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--green);animation:pulse 2s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+.saved-race-item{display:flex;justify-content:space-between;align-items:center;padding:10px 14px;border:1px solid var(--border);border-radius:var(--r);margin-bottom:6px;cursor:pointer;transition:all .15s}
+.saved-race-item:hover{border-color:var(--gold);background:rgba(200,168,75,.04)}
+.perf-note{font-size:12px;color:var(--muted);line-height:1.7;background:var(--bg3);border:1px solid var(--border);border-radius:var(--r);padding:14px;margin-top:16px}
+.perf-note strong{color:var(--text)}
+select[multiple]{height:auto}
+</style>
+</head>
+<body>
+
+<header>
+<div class="container">
+<div class="header-inner">
+  <div class="logo">
+    <div class="logo-mark">HK</div>
+    <div>
+      <div class="logo-text">Racing Predictor</div>
+      <div class="logo-sub">Happy Valley · Sha Tin · HKJC</div>
+    </div>
+  </div>
+  <div class="last-update" id="lastUpdate">Data: loading...</div>
+</div>
+</div>
+</header>
+
+<div class="container">
+<div class="tabs" id="tabs">
+  <div class="tab active" data-tab="setup">Race Setup</div>
+  <div class="tab" data-tab="horses">Horses <span id="horseCount">(0)</span></div>
+  <div class="tab" data-tab="predictions">Predictions</div>
+  <div class="tab" data-tab="results">Log Results</div>
+  <div class="tab" data-tab="performance">Performance</div>
+</div>
+
+<!-- SETUP PAGE -->
+<div class="page active" id="page-setup">
+  <div id="scrapedBanner" style="display:none" class="scraped-banner">
+    <div class="dot"></div>
+    <span id="scrapedMsg">Auto-scraped race data loaded from HKJC</span>
+  </div>
+
+  <div class="grid2">
+    <div class="field"><label>Date</label><input type="date" id="raceDate"></div>
+    <div class="field"><label>Track</label>
+      <select id="raceTrack"><option>Sha Tin</option><option>Happy Valley</option></select>
+    </div>
+    <div class="field"><label>Race number</label>
+      <select id="raceNumber"><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option><option>7</option><option>8</option><option>9</option><option>10</option><option>11</option></select>
+    </div>
+    <div class="field"><label>Distance (m)</label>
+      <select id="raceDist"><option>1000</option><option>1200</option><option>1400</option><option>1600</option><option>1800</option><option>2000</option><option>2200</option><option>2400</option></select>
+    </div>
+    <div class="field"><label>Going</label>
+      <select id="raceGoing"><option>Firm</option><option>Good</option><option>Good to Soft</option><option>Soft</option><option>Heavy</option></select>
+    </div>
+  </div>
+
+  <div class="flex-row" style="margin-top:8px">
+    <button class="gold" onclick="saveSetup()">Save &amp; add horses →</button>
+  </div>
+
+  <div id="savedRacesSection" style="display:none">
+    <div class="sec">Saved races</div>
+    <div id="savedRacesList"></div>
+  </div>
+  <div style="margin-top:20px">
+    <button onclick="clearAllData()" style="font-size:12px;color:var(--red);border-color:transparent">Clear all saved data</button>
+  </div>
+</div>
+
+<!-- HORSES PAGE -->
+<div class="page" id="page-horses">
+  <div id="horseList"></div>
+  <div id="addFormContainer"></div>
+  <div class="flex-row" style="margin-top:14px" id="horseActions">
+    <button onclick="showAddForm()">+ Add horse</button>
+    <button class="gold" id="viewPredsBtn" onclick="goToPredictions()" style="display:none">View predictions →</button>
+  </div>
+</div>
+
+<!-- PREDICTIONS PAGE -->
+<div class="page" id="page-predictions">
+  <div id="predictionsContent"></div>
+</div>
+
+<!-- RESULTS PAGE -->
+<div class="page" id="page-results">
+  <div id="resultsContent"></div>
+</div>
+
+<!-- PERFORMANCE PAGE -->
+<div class="page" id="page-performance">
+  <div id="performanceContent"></div>
+</div>
+
+</div><!-- /container -->
+
+<div class="container">
+<p class="disclaimer">⚠️ No prediction model guarantees results. Past performance does not indicate future results. Never bet more than you can afford to lose. This tool is for research purposes only. Always gamble responsibly.</p>
+</div>
+
+<script>
+// ─── State ─────────────────────────────────────────────────────────────────
+let state = {
+  race: { date: new Date().toISOString().split('T')[0], track: 'Sha Tin', number: '1', distance: '1200', going: 'Good' },
+  horses: [],
+  savedRaces: [],
+  results: [],
+  activeRaceId: null,
+  addingHorse: false,
+  editIdx: null,
+  editHorse: null,
+  scrapedData: null
+};
+
+// ─── Init ───────────────────────────────────────────────────────────────────
+window.onload = async function() {
+  loadFromStorage();
+  document.getElementById('raceDate').value = state.race.date;
+  setupTabs();
+  await tryLoadScrapedData();
+  renderAll();
+};
+
+function loadFromStorage() {
+  try { state.savedRaces = JSON.parse(localStorage.getItem('hkjc_races') || '[]'); } catch(e){}
+  try { state.results = JSON.parse(localStorage.getItem('hkjc_results') || '[]'); } catch(e){}
+}
+
+async function tryLoadScrapedData() {
+  try {
+    const r = await fetch('data/races.json');
+    if (r.ok) {
+      state.scrapedData = await r.json();
+      document.getElementById('lastUpdate').textContent = 'Data: ' + (state.scrapedData.scraped_at || 'auto-scraped');
+      document.getElementById('scrapedBanner').style.display = 'flex';
+      document.getElementById('scrapedMsg').textContent = `Auto-scraped: ${state.scrapedData.races?.length || 0} race(s) loaded from HKJC`;
+      // Pre-populate if data exists for today
+      if (state.scrapedData.races && state.scrapedData.races.length > 0) {
+        const firstRace = state.scrapedData.races[0];
+        document.getElementById('raceTrack').value = firstRace.track || 'Sha Tin';
+        document.getElementById('raceDate').value = firstRace.date || state.race.date;
+      }
+    } else {
+      document.getElementById('lastUpdate').textContent = 'Data: manual entry mode';
+    }
+  } catch(e) {
+    document.getElementById('lastUpdate').textContent = 'Data: manual entry mode';
+  }
+}
+
+function saveToStorage() {
+  localStorage.setItem('hkjc_races', JSON.stringify(state.savedRaces));
+  localStorage.setItem('hkjc_results', JSON.stringify(state.results));
+}
+
+// ─── Scoring Engine ─────────────────────────────────────────────────────────
+function impliedProb(odds) { return 1 / parseFloat(odds); }
+
+function calcOddsScore(horse, all) {
+  const p = impliedProb(horse.odds);
+  const total = all.reduce((s, h) => s + impliedProb(h.odds), 0);
+  return Math.min(100, (p / total) * 100 * all.length);
+}
+
+function parseForm(str) {
+  return (str || '').split(',').map(s => parseInt(s.trim())).filter(n => !isNaN(n) && n > 0);
+}
+
+function calcFormScore(form) {
+  if (!form || form.length === 0) return 45;
+  const w = [5, 4, 3, 2, 1];
+  let sc = 0, tw = 0;
+  form.forEach((pos, i) => {
+    if (i < 5) {
+      const ps = pos === 1 ? 100 : pos === 2 ? 80 : pos === 3 ? 60 : pos <= 5 ? 40 : 18;
+      sc += ps * w[i]; tw += w[i];
+    }
+  });
+  return tw > 0 ? sc / tw : 45;
+}
+
+function calcMovement(open, cur) {
+  const o = parseFloat(open), c = parseFloat(cur);
+  if (!o || o <= 0) return 0;
+  const chg = (o - c) / o;
+  if (chg > 0.15) return 100;
+  if (chg > 0.05) return 60;
+  if (chg < -0.15) return -60;
+  if (chg < -0.05) return -25;
+  return 0;
+}
+
+function trackScore(r) {
+  return { excellent: 100, good: 75, fair: 50, poor: 25, unknown: 45 }[r] || 45;
+}
+
+function scoreHorse(horse, all) {
+  const oddsScore = calcOddsScore(horse, all);
+  const formScore = calcFormScore(parseForm(horse.form));
+  const tipScore = (parseInt(horse.tipsters) || 0) / 12 * 100;
+  const jockeyScore = parseFloat(horse.jockeyRate) || 50;
+  const trainerScore = parseFloat(horse.trainerRate) || 50;
+  const trkScore = trackScore(horse.trackRecord);
+  const mvBonus = calcMovement(horse.openingOdds, horse.odds);
+
+  const total = oddsScore * 0.20 + formScore * 0.20 + tipScore * 0.20 +
+                jockeyScore * 0.15 + trainerScore * 0.10 + trkScore * 0.10 + mvBonus * 0.05;
+
+  const totalIP = all.reduce((s, h) => s + impliedProb(h.odds), 0);
+  const winP = impliedProb(horse.odds) / totalIP * 100;
+  const placeP = Math.min(94, winP * 2.4);
+  const top3P = Math.min(98, winP * 3.3);
+  const valueRatio = (winP / 100) / impliedProb(horse.odds);
+
+  const completeness = [horse.form && horse.form.trim(), parseFloat(horse.jockeyRate) !== 50,
+    parseFloat(horse.trainerRate) !== 50, horse.trackRecord !== 'unknown',
+    parseInt(horse.tipsters) > 0].filter(Boolean).length / 5;
+
+  let conf, confClass;
+  if (total >= 68 && completeness >= 0.7) { conf = 'Very High'; confClass = 'green'; }
+  else if (total >= 54 && completeness >= 0.5) { conf = 'High'; confClass = 'blue'; }
+  else if (total >= 40) { conf = 'Medium'; confClass = 'amber'; }
+  else { conf = 'Low'; confClass = 'red'; }
+
+  return { total: Math.max(0, Math.min(100, total)), oddsScore, formScore, tipScore,
+           jockeyScore, trainerScore, trkScore, mvBonus, winP, placeP, top3P,
+           valueRatio, conf, confClass, completeness };
+}
+
+function genReason(horse, sc, rank) {
+  const tips = parseInt(horse.tipsters) || 0;
+  const parts = [];
+  if (tips >= 8) parts.push(`${tips}/12 tipsters backing this horse`);
+  else if (tips >= 5) parts.push(`${tips}/12 tipsters in agreement`);
+  if (sc.formScore >= 78) parts.push('strong recent form');
+  else if (sc.formScore <= 35) parts.push('patchy recent results');
+  if (parseFloat(horse.jockeyRate) >= 25) parts.push(`jockey at ${horse.jockeyRate}% win rate at this track`);
+  if (sc.trkScore >= 75) parts.push('proven at this track and distance');
+  if (sc.mvBonus >= 60) parts.push('odds shortening — smart money signal');
+  else if (sc.mvBonus <= -30) parts.push('odds drifting — market losing confidence');
+  if (sc.oddsScore >= 65) parts.push('strongly supported in the market');
+  if (parts.length === 0) parts.push('balanced profile across all scoring factors');
+  return `Ranked #${rank} | Score ${sc.total.toFixed(1)}/100. Key factors: ${parts.join('; ')}.`;
+}
+
+function getScoredHorses() {
+  if (state.horses.length < 1) return [];
+  return state.horses.map(h => {
+    const sc = scoreHorse(h, state.horses);
+    return { ...h, sc };
+  }).sort((a, b) => b.sc.total - a.sc.total)
+    .map((h, i) => ({ ...h, rank: i + 1, reason: genReason(h, h.sc, i + 1) }));
+}
+
+// ─── Tab Navigation ──────────────────────────────────────────────────────────
+function setupTabs() {
+  document.querySelectorAll('.tab').forEach(t => {
+    t.addEventListener('click', () => {
+      const tab = t.dataset.tab;
+      document.querySelectorAll('.tab').forEach(x => x.classList.remove('active'));
+      document.querySelectorAll('.page').forEach(x => x.classList.remove('active'));
+      t.classList.add('active');
+      document.getElementById('page-' + tab).classList.add('active');
+      if (tab === 'predictions') renderPredictions();
+      if (tab === 'results') renderResults();
+      if (tab === 'performance') renderPerformance();
+    });
+  });
+}
+
+function goToTab(tab) {
+  document.querySelectorAll('.tab').forEach(t => {
+    t.classList.toggle('active', t.dataset.tab === tab);
+  });
+  document.querySelectorAll('.page').forEach(p => {
+    p.classList.toggle('active', p.id === 'page-' + tab);
+  });
+  if (tab === 'predictions') renderPredictions();
+  if (tab === 'results') renderResults();
+  if (tab === 'performance') renderPerformance();
+}
+
+// ─── Setup ───────────────────────────────────────────────────────────────────
+function saveSetup() {
+  state.race.date = document.getElementById('raceDate').value;
+  state.race.track = document.getElementById('raceTrack').value;
+  state.race.number = document.getElementById('raceNumber').value;
+  state.race.distance = document.getElementById('raceDist').value;
+  state.race.going = document.getElementById('raceGoing').value;
+
+  const id = state.activeRaceId || Date.now().toString();
+  const rd = { id, race: { ...state.race }, horses: JSON.parse(JSON.stringify(state.horses)), ts: new Date().toISOString() };
+  state.savedRaces = state.savedRaces.filter(r => r.id !== id).concat(rd);
+  state.activeRaceId = id;
+  saveToStorage();
+  renderSavedRaces();
+  goToTab('horses');
+}
+
+function loadSavedRace(id) {
+  const r = state.savedRaces.find(x => x.id === id);
+  if (!r) return;
+  state.race = { ...r.race };
+  state.horses = JSON.parse(JSON.stringify(r.horses));
+  state.activeRaceId = id;
+  document.getElementById('raceDate').value = state.race.date;
+  document.getElementById('raceTrack').value = state.race.track;
+  document.getElementById('raceNumber').value = state.race.number;
+  document.getElementById('raceDist').value = state.race.distance;
+  document.getElementById('raceGoing').value = state.race.going;
+  renderHorseList();
+  goToTab('predictions');
+}
+
+function renderSavedRaces() {
+  const sec = document.getElementById('savedRacesSection');
+  const list = document.getElementById('savedRacesList');
+  if (state.savedRaces.length === 0) { sec.style.display = 'none'; return; }
+  sec.style.display = 'block';
+  list.innerHTML = state.savedRaces.slice(-8).reverse().map(r =>
+    `<div class="saved-race-item" onclick="loadSavedRace('${r.id}')">
+      <span style="font-weight:700">${r.race.date} · ${r.race.track} Race ${r.race.number} · ${r.race.distance}m</span>
+      <span style="color:var(--muted);font-size:12px;font-family:var(--mono)">${r.horses.length} horses →</span>
+    </div>`
+  ).join('');
+}
+
+function clearAllData() {
+  if (!confirm('Delete all saved races and results?')) return;
+  state.savedRaces = []; state.results = []; state.horses = [];
+  state.activeRaceId = null;
+  localStorage.removeItem('hkjc_races'); localStorage.removeItem('hkjc_results');
+  renderAll();
+}
+
+// ─── Horses ─────────────────────────────────────────────────────────────────
+function showAddForm(idx = null) {
+  state.addingHorse = true;
+  state.editIdx = idx;
+  state.editHorse = idx !== null ? { ...state.horses[idx] } : {
+    name: '', barrier: '', odds: '', openingOdds: '', form: '',
+    tipsters: '0', jockeyRate: '50', trainerRate: '50', trackRecord: 'unknown'
+  };
+  renderAddForm();
+}
+
+function cancelAdd() {
+  state.addingHorse = false; state.editIdx = null; state.editHorse = null;
+  document.getElementById('addFormContainer').innerHTML = '';
+  document.getElementById('horseActions').style.display = 'flex';
+}
+
+function submitHorse() {
+  const h = {
+    name: v('hf-name'), barrier: v('hf-barrier'), odds: parseFloat(v('hf-odds')),
+    openingOdds: parseFloat(v('hf-openodds')) || parseFloat(v('hf-odds')),
+    form: v('hf-form'), tipsters: v('hf-tips'), jockeyRate: v('hf-jockey'),
+    trainerRate: v('hf-trainer'), trackRecord: v('hf-track')
+  };
+  if (!h.name.trim() || !h.odds) return;
+  if (state.editIdx !== null) { state.horses[state.editIdx] = h; }
+  else { state.horses.push(h); }
+  cancelAdd();
+  renderHorseList();
+  saveRaceState();
+}
+
+function removeHorse(i) {
+  state.horses.splice(i, 1);
+  renderHorseList();
+  saveRaceState();
+}
+
+function saveRaceState() {
+  if (!state.activeRaceId) state.activeRaceId = Date.now().toString();
+  const rd = { id: state.activeRaceId, race: { ...state.race }, horses: JSON.parse(JSON.stringify(state.horses)), ts: new Date().toISOString() };
+  state.savedRaces = state.savedRaces.filter(r => r.id !== state.activeRaceId).concat(rd);
+  saveToStorage();
+}
+
+function v(id) { const el = document.getElementById(id); return el ? el.value : ''; }
+
+function renderHorseList() {
+  const list = document.getElementById('horseList');
+  const btn = document.getElementById('viewPredsBtn');
+  document.getElementById('horseCount').textContent = `(${state.horses.length})`;
+  btn.style.display = state.horses.length >= 2 ? 'inline-block' : 'none';
+  if (state.horses.length === 0) {
+    list.innerHTML = '<p style="color:var(--hint);font-size:13px;margin-bottom:16px">No horses added yet. Add each runner with their odds and available stats.</p>';
+    return;
+  }
+  list.innerHTML = state.horses.map((h, i) =>
+    `<div class="horse-row">
+      <div class="horse-name">${h.name}</div>
+      <div class="horse-meta">B${h.barrier||'?'} · ${h.odds} · ${h.tipsters}/12 tips</div>
+      <button onclick="showAddForm(${i})" style="padding:5px 12px;font-size:12px">Edit</button>
+      <button onclick="removeHorse(${i})" style="padding:5px 12px;font-size:12px;color:var(--red)">✕</button>
+    </div>`
+  ).join('');
+}
+
+function renderAddForm() {
+  const h = state.editHorse;
+  const isEdit = state.editIdx !== null;
+  document.getElementById('horseActions').style.display = 'none';
+  document.getElementById('addFormContainer').innerHTML = `
+<div class="add-form">
+<h3>${isEdit ? 'Edit horse' : 'Add horse'}</h3>
+<div class="grid2">
+  <div class="field" style="grid-column:1/-1"><label>Horse name *</label><input id="hf-name" value="${esc(h.name||'')}"></div>
+  <div class="field"><label>Barrier draw</label><input id="hf-barrier" type="number" value="${esc(h.barrier||'')}"></div>
+  <div class="field"><label>Current odds *</label><input id="hf-odds" type="number" step="0.1" value="${h.odds||''}"></div>
+  <div class="field"><label>Opening odds (for movement detection)</label><input id="hf-openodds" type="number" step="0.1" value="${h.openingOdds||''}"></div>
+  <div class="field"><label>Tipsters backing this horse (0–12)</label><input id="hf-tips" type="number" min="0" max="12" value="${h.tipsters||'0'}"></div>
+  <div class="field" style="grid-column:1/-1"><label>Last 5 finishing positions — most recent first (e.g. 1,3,2,1,5)</label><input id="hf-form" value="${esc(h.form||'')}" placeholder="e.g. 2,1,3,4,1"></div>
+  <div class="field"><label>Jockey win % at this track (0–100)</label><input id="hf-jockey" type="number" min="0" max="100" value="${h.jockeyRate||'50'}"></div>
+  <div class="field"><label>Trainer win % — last 30 days (0–100)</label><input id="hf-trainer" type="number" min="0" max="100" value="${h.trainerRate||'50'}"></div>
+  <div class="field">
+    <label>Track &amp; distance record</label>
+    <select id="hf-track">
+      ${['unknown','excellent','good','fair','poor'].map(o => `<option value="${o}"${(h.trackRecord||'unknown')===o?' selected':''}>${o.charAt(0).toUpperCase()+o.slice(1)}</option>`).join('')}
+    </select>
+  </div>
+</div>
+<p class="hint">Leave jockey/trainer at 50 if unknown (neutral score). Tipster count is the number of your 12 sources that tip this horse. Opening odds = what it opened at to detect market movement.</p>
+<div class="flex-row" style="margin-top:16px">
+  <button class="gold" onclick="submitHorse()">${isEdit ? 'Save changes' : 'Add horse'}</button>
+  <button onclick="cancelAdd()">Cancel</button>
+</div>
+</div>`;
+}
+
+function goToPredictions() {
+  saveRaceState();
+  goToTab('predictions');
+}
+
+// ─── Predictions ─────────────────────────────────────────────────────────────
+function renderPredictions() {
+  const container = document.getElementById('predictionsContent');
+  const scored = getScoredHorses();
+
+  if (scored.length < 2) {
+    container.innerHTML = `<div class="empty"><p>Add at least 2 horses to generate predictions.</p><button onclick="goToTab('horses')">Go to Horses →</button></div>`;
+    return;
+  }
+
+  const bestValue = scored.reduce((b, h) => h.sc.valueRatio > b.sc.valueRatio ? h : b, scored[0]);
+  const medals = ['🥇', '🥈', '🥉'];
+
+  const raceBar = `<div class="race-info-bar">
+    <span><strong>${state.race.track}</strong></span>
+    <span>Race <strong>${state.race.number}</strong></span>
+    <span><strong>${state.race.distance}m</strong></span>
+    <span>Going: <strong>${state.race.going}</strong></span>
+    <span>${state.race.date}</span>
+  </div>`;
+
+  const top3 = scored.slice(0, 3).map((h, i) => {
+    const mp = h.openingOdds ? ((parseFloat(h.openingOdds) - parseFloat(h.odds)) / parseFloat(h.openingOdds) * 100) : 0;
+    const isVal = bestValue && h.name === bestValue.name;
+    const medalStr = medals[i];
+    return `<div class="card${i === 0 ? ' featured' : ''}">
+  <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:10px;margin-bottom:14px">
+    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+      <span style="font-size:18px">${medalStr}</span>
+      <span style="font-size:16px;font-weight:700">${esc(h.name)}</span>
+      ${h.barrier ? `<span style="font-size:12px;color:var(--muted);font-family:var(--mono)">B${h.barrier}</span>` : ''}
+      ${isVal ? `<span class="badge gold">Best Value</span>` : ''}
+    </div>
+    <span class="badge ${h.sc.confClass}">${h.sc.conf} confidence</span>
+  </div>
+  <div class="grid3" style="margin-bottom:14px">
+    ${[['Win prob.', h.sc.winP.toFixed(1) + '%', h.sc.winP],
+       ['Place prob.', h.sc.placeP.toFixed(1) + '%', h.sc.placeP],
+       ['Top-3 prob.', h.sc.top3P.toFixed(1) + '%', h.sc.top3P]].map(([l,v,pct]) =>
+    `<div class="metric">
+      <div class="lbl">${l}</div>
+      <div class="val" style="font-size:22px">${v}</div>
+      <div class="prob-bar"><div class="prob-fill" style="width:${Math.min(100,pct)}%"></div></div>
+    </div>`).join('')}
+  </div>
+  <div style="display:flex;flex-wrap:wrap;gap:16px;font-size:12px;color:var(--muted);font-family:var(--mono);margin-bottom:10px">
+    <span>Score: <strong style="color:var(--text)">${h.sc.total.toFixed(1)}</strong></span>
+    <span>Odds: <strong style="color:var(--text)">${h.odds}</strong></span>
+    <span>Tips: <strong style="color:var(--text)">${h.tipsters}/12</strong></span>
+    ${mp > 2 ? `<span class="move-up">↑ Shortening ${mp.toFixed(1)}%</span>` : mp < -2 ? `<span class="move-dn">↓ Drifting ${Math.abs(mp).toFixed(1)}%</span>` : ''}
+    <span>Value: <strong class="${h.sc.valueRatio >= 1.2 ? 'value-good' : h.sc.valueRatio < 0.8 ? 'value-bad' : ''}">${h.sc.valueRatio.toFixed(2)}x</strong></span>
+  </div>
+  <p style="font-size:12px;color:var(--muted);line-height:1.6">${h.reason}</p>
+  ${h.sc.conf === 'Low' ? `<div class="alert warn"><span>⚠️</span><span>Low confidence — not enough data. Consider skipping this race or entering more details.</span></div>` : ''}
+</div>`;
+  }).join('');
+
+  const tableRows = scored.map((h, i) => {
+    const mp = h.openingOdds ? ((parseFloat(h.openingOdds) - parseFloat(h.odds)) / parseFloat(h.openingOdds) * 100) : 0;
+    return `<tr${i < 3 ? ' class="top3"' : ''}>
+    <td style="font-weight:700;font-family:var(--mono)">#${i + 1}</td>
+    <td style="font-weight:600">${esc(h.name)}${h.barrier ? ` <span style="color:var(--hint);font-size:11px">(B${h.barrier})</span>` : ''}</td>
+    <td style="font-family:var(--mono)">${h.odds}</td>
+    <td style="font-family:var(--mono);font-weight:700">${h.sc.total.toFixed(1)}</td>
+    <td style="font-family:var(--mono)">${h.sc.winP.toFixed(1)}%</td>
+    <td style="font-family:var(--mono)">${h.tipsters}/12</td>
+    <td style="font-family:var(--mono)" class="${h.sc.valueRatio >= 1.2 ? 'value-good' : h.sc.valueRatio < 0.8 ? 'value-bad' : ''}">${h.sc.valueRatio.toFixed(2)}x</td>
+    <td>${mp > 2 ? `<span class="move-up">↑${mp.toFixed(0)}%</span>` : mp < -2 ? `<span class="move-dn">↓${Math.abs(mp).toFixed(0)}%</span>` : '—'}</td>
+    <td><span class="badge ${h.sc.confClass}">${h.sc.conf}</span></td>
+  </tr>`;
+  }).join('');
+
+  container.innerHTML = raceBar + top3 +
+    `<div class="sec">Full field</div>
+    <div style="overflow-x:auto">
+    <table>
+    <thead><tr><th>Rank</th><th>Horse</th><th>Odds</th><th>Score</th><th>Win %</th><th>Tips</th><th>Value</th><th>Move</th><th>Confidence</th></tr></thead>
+    <tbody>${tableRows}</tbody></table></div>
+    <div class="alert success" style="margin-top:16px">
+      <span>ℹ️</span>
+      <span>Value ratio above 1.0x means the model estimates a higher probability than the market implies. 1.2x+ = potential overlay worth considering.</span>
+    </div>`;
+}
+
+// ─── Results ──────────────────────────────────────────────────────────────────
+function renderResults() {
+  const scored = getScoredHorses();
+  const predicted = scored.slice(0, 3).map(h => h.name);
+  const horseOptions = state.horses.map(h => `<option value="${esc(h.name)}">${esc(h.name)}</option>`).join('');
+
+  const logForm = state.horses.length < 2 ? '<p style="color:var(--hint)">Add horses first to log results.</p>' : `
+<div class="card">
+  <div style="font-size:14px;font-weight:700;margin-bottom:12px">Log actual result</div>
+  <div style="font-size:12px;color:var(--muted);margin-bottom:14px;font-family:var(--mono)">
+    ${state.race.track} Race ${state.race.number} · ${state.race.date}<br>
+    Predicted: ${predicted.join(' → ') || 'No predictions'}
+  </div>
+  ${['1st', '2nd', '3rd'].map((pos, i) => {
+    const ids = ['res-first', 'res-second', 'res-third'];
+    return `<div class="field"><label>${pos} place</label>
+      <select id="${ids[i]}"><option value="">Select...</option>${horseOptions}</select>
+    </div>`;
+  }).join('')}
+  <button class="gold" onclick="logResult()" style="margin-top:4px">Save result</button>
+</div>`;
+
+  const recent = state.results.slice(-10).reverse().map(r => {
+    const cls = r.top3Correct >= 2 ? 'green' : r.top3Correct === 1 ? 'amber' : 'red';
+    return `<div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:8px">
+        <span style="font-weight:700">${r.race.track} Race ${r.race.number} · ${r.date}</span>
+        <span class="badge ${cls}">${r.top3Correct}/3 top-3 correct</span>
+      </div>
+      <div style="font-size:12px;color:var(--muted);font-family:var(--mono)">
+        Predicted: ${r.predicted.join(' → ')} &nbsp;|&nbsp; Actual: ${r.actual.join(' → ')}
+      </div>
+    </div>`;
+  }).join('');
+
+  document.getElementById('resultsContent').innerHTML = logForm +
+    (state.results.length > 0 ? `<div class="sec">Recent results</div>${recent}` : '');
+}
+
+function logResult() {
+  const first = v('res-first'), second = v('res-second'), third = v('res-third');
+  if (!first) return;
+  const scored = getScoredHorses();
+  const predicted = scored.slice(0, 3).map(h => h.name);
+  const actual = [first, second, third].filter(Boolean);
+  const top3Correct = actual.filter(h => predicted.includes(h)).length;
+  const posCorrect = actual.filter((h, i) => predicted[i] === h).length;
+  state.results.push({
+    id: Date.now(), raceId: state.activeRaceId,
+    race: { ...state.race }, predicted, actual,
+    top3Correct, posCorrect, date: state.race.date
+  });
+  saveToStorage();
+  renderResults();
+}
+
+// ─── Performance ──────────────────────────────────────────────────────────────
+function renderPerformance() {
+  const n = state.results.length;
+  const container = document.getElementById('performanceContent');
+  if (n === 0) {
+    container.innerHTML = `<div class="empty"><p>No results logged yet.</p><p style="font-size:12px;color:var(--hint)">Log actual race results to track your model's accuracy over time.</p></div>`;
+    return;
+  }
+
+  const winAcc = (state.results.filter(r => r.actual[0] === r.predicted[0]).length / n * 100).toFixed(1);
+  const placeAcc = (state.results.filter(r => r.actual.slice(0,2).some(a => r.predicted[0] === a)).length / n * 100).toFixed(1);
+  const top3Acc = (state.results.filter(r => r.top3Correct >= 1).length / n * 100).toFixed(1);
+  const avg3 = (state.results.reduce((s, r) => s + r.top3Correct, 0) / n).toFixed(2);
+
+  let notes = [];
+  if (parseFloat(top3Acc) < 33 && n >= 5) notes.push('⚠️ Top-3 accuracy below chance level — consider increasing tipster consensus weight.');
+  if (parseFloat(winAcc) > 40) notes.push('✅ Win accuracy is strong — the model is identifying winners well.');
+  if (parseFloat(top3Acc) > 60) notes.push('✅ Solid top-3 accuracy — the model consistently identifies contenders.');
+  if (n < 10) notes.push('📊 Log at least 10 races for meaningful pattern analysis.');
+
+  const tableRows = state.results.slice().reverse().map(r =>
+    `<tr>
+      <td style="white-space:nowrap;font-family:var(--mono)">${r.date}</td>
+      <td style="white-space:nowrap">${r.race.track} R${r.race.number}</td>
+      <td>${r.predicted.join(' → ')}</td>
+      <td>${r.actual.join(' → ')}</td>
+      <td><span class="badge ${r.top3Correct >= 2 ? 'green' : r.top3Correct === 1 ? 'amber' : 'red'}">${r.top3Correct}/3</span></td>
+    </tr>`
+  ).join('');
+
+  container.innerHTML = `
+<div class="grid4" style="margin-bottom:24px">
+  <div class="metric"><div class="lbl">Races logged</div><div class="val">${n}</div></div>
+  <div class="metric"><div class="lbl">Win accuracy</div><div class="val">${winAcc}%</div><div class="sub">Top pick won</div></div>
+  <div class="metric"><div class="lbl">Place accuracy</div><div class="val">${placeAcc}%</div><div class="sub">Top pick placed</div></div>
+  <div class="metric"><div class="lbl">Top-3 accuracy</div><div class="val">${top3Acc}%</div><div class="sub">≥1 of 3 correct</div></div>
+</div>
+${notes.length ? `<div class="perf-note">${notes.map(n => `<div>${n}</div>`).join('')}</div>` : ''}
+<div class="sec">All results</div>
+<div style="overflow-x:auto">
+<table>
+<thead><tr><th>Date</th><th>Race</th><th>Predicted top 3</th><th>Actual top 3</th><th>Correct</th></tr></thead>
+<tbody>${tableRows}</tbody></table></div>`;
+}
+
+// ─── Utils ───────────────────────────────────────────────────────────────────
+function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+function renderAll() {
+  renderSavedRaces();
+  renderHorseList();
+  document.getElementById('horseCount').textContent = `(${state.horses.length})`;
+}
+</script>
+</body>
+</html>
