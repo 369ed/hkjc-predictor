@@ -1,0 +1,6 @@
+{
+  "scraped_at": "Not yet scraped — run the scraper or wait for race day",
+  "source": "Manual",
+  "races": [],
+  "note": "This file is auto-updated by GitHub Actions on race days. You can also run scraper.py manually."
+}
