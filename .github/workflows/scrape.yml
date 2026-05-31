@@ -1,0 +1,40 @@
+name: Auto-Scrape HKJC Race Data
+
+on:
+  # Run automatically on Wednesday and Saturday at 8am HKT (= 00:00 UTC)
+  schedule:
+    - cron: '0 0 * * 3'   # Wednesday 8am HKT
+    - cron: '0 0 * * 6'   # Saturday 8am HKT
+
+  # Also allow manual trigger (click "Run workflow" in GitHub Actions tab)
+  workflow_dispatch:
+
+jobs:
+  scrape:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write   # needed to commit data/races.json back to repo
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install requests beautifulsoup4 lxml
+
+      - name: Run scraper
+        run: python scraper.py
+
+      - name: Commit and push updated race data
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "HKJC Scraper Bot"
+          git add data/races.json
+          # Only commit if something actually changed
+          git diff --staged --quiet || git commit -m "Auto-update: race data $(date +'%Y-%m-%d %H:%M UTC')"
+          git push
